@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+
+  <meta charset="UTF-8">
+  <title>Train Scheduler</title>
+
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+</head>
+
+<body>
+
+  <div class="container">
+
+    <br>
+
+    <!-- Jumbotron -->
+    <div class="jumbotron">
+      <h1 class="text-center">Anytime is Train Time</h1>
+    </div>
+    <div class="row">
+    <!-- add Train schedule-->
+      <div class="col-lg-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h3 class="panel-title">Current Train Schedule</h3>
+                </div>
+                <div class="panel-body" id="trainInfo">
+                  <table class="table table-hover">
+                    <thead>
+                      <tr>
+                        <th scope="col">Train Name</th>
+                        <th scope="col">Destination</th>
+                        <th scope="col">Frequency(min)</th>
+                        <th scope="col">Next Arrival</th>
+                        <th scope="col">Minutes Away</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- <tr>                     
+                        <td>Mark</td>
+                        <td>Otto</td>
+                        <td>@mdo</td>
+                        <td>@mdo</td>
+                        <td>@mdo</td>
+                      </tr> -->
+                      
+                    </tbody>
+                  </table>
+                </div>
+            </div>
+      </div>
+            
+      <!-- add Train Panel-->
+      <div class="col-lg-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Add Train</h3>
+          </div>
+          <div class="panel-body">
+
+            <!-- Sign-up Form (note the various input "types")-->
+            <form role="form">
+              <div class="form-group">
+                <label for="name-input">Train Name</label>
+                <input class="form-control" id="name-input" type="text">
+              </div>
+              <div class="form-group">
+                <label for="destination-input">Destination</label>
+                <input class="form-control" id="destination-input" type="text">
+              </div>
+              <div class="form-group">
+                <label for="time-input">First Train Time (HH:mm-military time)</label>
+                <input class="form-control" id="time-input" type="time">
+              </div>
+              <div class="form-group">
+                <label for="frequency-input">Frequency (min)</label>
+                <input class="form-control" id="frequency-input" type="number">
+              </div>
+              <button class="btn btn-default" id="add-train" type="submit">Submit</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+
+  </div>
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery.js"></script>
+
+  <!-- LINK TO FIREBASE GOES HERE -->
+  <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase.js"></script>
+  <script src="https://cdn.jsdelivr.net/momentjs/2.12.0/moment.min.js"></script>
+  <!-- Script -->
+  <script>
+        // Initialize Firebase
+        var config = {
+          apiKey: "AIzaSyB4eStBT4FifCF35K-xHeEmoINK_Kv491o",
+          authDomain: "train-scheduler-b3d83.firebaseapp.com",
+          databaseURL: "https://train-scheduler-b3d83.firebaseio.com",
+          projectId: "train-scheduler-b3d83",
+          storageBucket: "",
+          messagingSenderId: "658793032446"
+        };
+        firebase.initializeApp(config);
+    // Create a variable to reference the database
+    var database = firebase.database();
+    var trainName='';
+    var destination='';
+    var ftrainTime='';
+    var frequency='';
+    //var nextArrival='';
+    var minutesAway=0;
+
+    // Assumptions
+    //var tFrequency = 0;
+
+    // Time is 3:30 AM
+    //var firstTime = "03:30";
+
+    // First Time (pushed back 1 year to make sure it comes before current time)
+    // var firstTimeConverted = moment(ftrainTime, "HH:mm");
+    // console.log(firstTimeConverted);
+
+    // Current Time
+    var currentTime = moment();
+    console.log("CURRENT TIME: " + moment(currentTime).format("hh:mm"));
+    
+    
+
+
+   // var train = {trainName:"Trenton Express", destination:"Trenton", frequency: 25, time:"05:25 PM"};
+    // Capture Button Click
+    $("#add-train").on("click", function() {
+      // Don't refresh the page!
+      event.preventDefault();
+
+      // YOUR TASK!!!
+      trainName=$('#name-input').val().trim();
+      destination=$('#destination-input').val().trim();
+      ftrainTime=$('#time-input').val().trim();
+      frequency=$('#frequency-input').val().trim();
+     //test calculation of next Arrival and minutes away
+     //next arrival 
+       var firstTimeConverted = moment(ftrainTime, "HH:mm").subtract(1, "days");
+   
+       //var firstTimeConverted = moment(ftrainTime, "HH:mm");
+       console.log(moment(firstTimeConverted).format("hh:mm"));
+       // Difference between the times
+       var diffTime = moment().diff(moment(firstTimeConverted), "minutes");
+       console.log("DIFFERENCE IN TIME: " + diffTime);
+
+    // Time apart (remainder)
+       var tRemainder = diffTime % frequency;
+       console.log(tRemainder);
+
+    // Minute Until Train
+    var tMinutesTillTrain = frequency - tRemainder;
+    console.log("MINUTES TILL TRAIN: " + tMinutesTillTrain);
+
+    // Next Train
+    var nextTrain = moment().add(tMinutesTillTrain, "minutes");
+    console.log("ARRIVAL TIME: " + moment(nextTrain).format("hh:mm"));
+
+      // Code in the logic for storing and retrieving the most recent user.
+      database.ref().push({
+         name: trainName,
+         destination: destination,
+         time: ftrainTime,
+         frequency: frequency,
+         nextArrival: moment(nextTrain).format("hh:mm a"),
+         minutesAway: tMinutesTillTrain
+         //dateAdded: firebase.database.ServerValue.TIMESTAMP
+         
+      });
+      // Don't forget to provide initial data to your Firebase database.
+
+    });
+    var i=0;
+    database.ref().on("child_added", function(childSnapshot) {
+   // $('tbody').empty();
+   // i++;
+// Print the initial data to the console.
+// console.log(childSnapshot.val().name);
+// console.log(i);
+// console.log(childSnapshot.val().destination);
+// console.log(childSnapshot.val().frequency);
+// console.log(childSnapshot.val().nextArrival);
+// console.log(childSnapshot.val().minutesAway);
+//$('tbody').append("<tr><td>"+childSnapshot.val().name+"</td><td>"+childSnapshot.val().destination+"</td><td>"+childSnapshot.val().frequency+"</td><td>"+childSnapshot.val().nextArrival+"</td><td>"+childSnapshot.val().minutesAway+"</td><button>Update</button><button>Remove</button></tr>");
+      $('<tr>').appendTo('tbody');
+      $('<td>').text(childSnapshot.val().name).appendTo("tbody tr:last");
+      $('<td>').text(childSnapshot.val().destination).appendTo("tbody tr:last");
+      $('<td>').text(childSnapshot.val().frequency).appendTo("tbody tr:last");
+      $('<td>').text(childSnapshot.val().nextArrival).appendTo("tbody tr:last");
+      $('<td>').text(childSnapshot.val().minutesAway).appendTo("tbody tr:last");
+      $('<button>').attr("class","update").text("update").appendTo("tbody tr:last");
+      $('<button>').attr("class","remove").text("Remove").appendTo("tbody tr:last");
+
+// If any errors are experienced, log them to console.
+}, function(errorObject) {
+console.log("The read failed: " + errorObject.code);
+});
+    // Firebase watcher + initial loader HINT: .on("value")
+$('tbody').on("click","button[class=update]",function(){
+
+
+})
+
+$('tbody').on("click","button[class=remove]",function(){
+  console.log(this);
+  //console.log(this.parentNode());
+   //this.siblings().remove();
+  
+})
+    // Create Error Handling
+  </script>
+
+</body>
+
+</html>
