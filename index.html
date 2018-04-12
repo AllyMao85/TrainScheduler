@@ -8,13 +8,14 @@
 
   <!-- Bootstrap -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-
+  
 </head>
 
 <body>
 
   <div class="container">
-
+    <button onclick = "githubSignin()">Github Signin</button>
+    <button onclick = "githubSignout()">Github Signout</button>
     <br>
 
     <!-- Jumbotron -->
@@ -40,14 +41,7 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <!-- <tr>                     
-                        <td>Mark</td>
-                        <td>Otto</td>
-                        <td>@mdo</td>
-                        <td>@mdo</td>
-                        <td>@mdo</td>
-                      </tr> -->
-                      
+                     
                     </tbody>
                   </table>
                 </div>
@@ -96,6 +90,7 @@
 
   <!-- LINK TO FIREBASE GOES HERE -->
   <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase.js"></script>
+  <script src="index.js"></script>
   <script src="https://cdn.jsdelivr.net/momentjs/2.12.0/moment.min.js"></script>
   <!-- Script -->
   <script>
@@ -118,30 +113,14 @@
     //var nextArrival='';
     var minutesAway=0;
 
-    // Assumptions
-    //var tFrequency = 0;
-
-    // Time is 3:30 AM
-    //var firstTime = "03:30";
-
-    // First Time (pushed back 1 year to make sure it comes before current time)
-    // var firstTimeConverted = moment(ftrainTime, "HH:mm");
-    // console.log(firstTimeConverted);
-
     // Current Time
     var currentTime = moment();
     console.log("CURRENT TIME: " + moment(currentTime).format("hh:mm"));
     
-    
-
-
-   // var train = {trainName:"Trenton Express", destination:"Trenton", frequency: 25, time:"05:25 PM"};
-    // Capture Button Click
     $("#add-train").on("click", function() {
-      // Don't refresh the page!
       event.preventDefault();
 
-      // YOUR TASK!!!
+    
       trainName=$('#name-input').val().trim();
       destination=$('#destination-input').val().trim();
       ftrainTime=$('#time-input').val().trim();
@@ -155,19 +134,24 @@
        // Difference between the times
        var diffTime = moment().diff(moment(firstTimeConverted), "minutes");
        console.log("DIFFERENCE IN TIME: " + diffTime);
-
+       if (diffTime>0) {
     // Time apart (remainder)
-       var tRemainder = diffTime % frequency;
-       console.log(tRemainder);
+           var tRemainder = diffTime % frequency;
+           console.log(tRemainder);
 
     // Minute Until Train
-    var tMinutesTillTrain = frequency - tRemainder;
-    console.log("MINUTES TILL TRAIN: " + tMinutesTillTrain);
+           var tMinutesTillTrain = frequency - tRemainder;
+           console.log("MINUTES TILL TRAIN: " + tMinutesTillTrain);
 
     // Next Train
-    var nextTrain = moment().add(tMinutesTillTrain, "minutes");
-    console.log("ARRIVAL TIME: " + moment(nextTrain).format("hh:mm"));
-
+           var nextTrain = moment().add(tMinutesTillTrain, "minutes");
+           console.log("ARRIVAL TIME: " + moment(nextTrain).format("hh:mm"));
+       } else {
+         var tMinutesTillTrain = 0 - diffTime;
+         var nextTrain = ftraintime;
+         console.log("MINUTES TILL TRAIN: " + tMinutesTillTrain);
+         console.log("ARRIVAL TIME: " + moment(nextTrain).format("hh:mm"));
+       };
       // Code in the logic for storing and retrieving the most recent user.
       database.ref().push({
          name: trainName,
@@ -186,37 +170,139 @@
     database.ref().on("child_added", function(childSnapshot) {
    // $('tbody').empty();
    // i++;
-// Print the initial data to the console.
-// console.log(childSnapshot.val().name);
-// console.log(i);
-// console.log(childSnapshot.val().destination);
-// console.log(childSnapshot.val().frequency);
-// console.log(childSnapshot.val().nextArrival);
-// console.log(childSnapshot.val().minutesAway);
-//$('tbody').append("<tr><td>"+childSnapshot.val().name+"</td><td>"+childSnapshot.val().destination+"</td><td>"+childSnapshot.val().frequency+"</td><td>"+childSnapshot.val().nextArrival+"</td><td>"+childSnapshot.val().minutesAway+"</td><button>Update</button><button>Remove</button></tr>");
-      $('<tr>').appendTo('tbody');
-      $('<td>').text(childSnapshot.val().name).appendTo("tbody tr:last");
-      $('<td>').text(childSnapshot.val().destination).appendTo("tbody tr:last");
-      $('<td>').text(childSnapshot.val().frequency).appendTo("tbody tr:last");
-      $('<td>').text(childSnapshot.val().nextArrival).appendTo("tbody tr:last");
-      $('<td>').text(childSnapshot.val().minutesAway).appendTo("tbody tr:last");
+   
+    var recKey=childSnapshot.key;
+
+      $('<tr>').attr('id',recKey).appendTo('tbody');
+      
+      $('<td>').text(childSnapshot.val().name).attr('class',"name").appendTo("tbody tr:last");
+      $('<td>').text(childSnapshot.val().destination).attr('class',"destination").appendTo("tbody tr:last");
+      $('<td>').text(childSnapshot.val().frequency).attr('class',"frequency").appendTo("tbody tr:last");
+      $('<td>').text(childSnapshot.val().nextArrival).attr('class',"nextArrival").appendTo("tbody tr:last");
+      $('<td>').text(childSnapshot.val().minutesAway).attr('class',"minutesAway").appendTo("tbody tr:last");
+        $('<button>').attr("class","edit").text("edit").appendTo("tbody tr:last");
       $('<button>').attr("class","update").text("update").appendTo("tbody tr:last");
       $('<button>').attr("class","remove").text("Remove").appendTo("tbody tr:last");
+   //need to check if below function is working???
+    var timeFresh=setInterval(function(){
+      tReminder = 0;
+      tMinutesTillTrain = 0;
+      nextTrain = '';
+      
+      firstTimeConverted = moment(childSnapshot.val().time, "HH:mm a");
+      currentTime = moment();
+      diffTime = moment().diff(moment(firstTimeConverted), "minutes");
+      if (diffTime>0) {
+      tRemainder = diffTime % childSnapshot.val().frequency;
 
+      tMinutesTillTrain = childSnapshot.val().frequency - tRemainder;
+      nextTrain = moment().add(tMinutesTillTrain, "minutes");
+      } else {
+        nextTrain = firstTimeConverted;
+        tMinutesTillTrain = 0-diffTime;
+      };
+      console.log("nextTrain: " + moment(nextTrain).format("hh:mm a"));
+      console.log("firstTrain: "+ moment(firstTimeConverted).format("hh:mm a"));
+      console.log("time difference is" + diffTime);
+      console.log("Frequency is" + childSnapshot.val().frequency);
+      console.log("remaining time" + tRemainder);
+      console.log("minutes away is" + tMinutesTillTrain);
+      console.log("next Train is" + nextTrain);
+
+  // Code in the logic for storing and retrieving the most recent user.
+       console.log(childSnapshot.key);
+       database.ref(childSnapshot.key).update({
+         nextArrival: moment(nextTrain).format("hh:mm a"),
+         minutesAway: tMinutesTillTrain
+      
+       });
+       $('tr#'+recKey).children('.nextArrival').text(childSnapshot.val().nextArrival);
+       $('tr#'+recKey).children('.minutesAway').text(childSnapshot.val().minutesAway);
+       console.log($('tr#'+recKey).children('.nextArrival'));
+    },60000);
 // If any errors are experienced, log them to console.
 }, function(errorObject) {
 console.log("The read failed: " + errorObject.code);
 });
     // Firebase watcher + initial loader HINT: .on("value")
-$('tbody').on("click","button[class=update]",function(){
 
-
-})
 
 $('tbody').on("click","button[class=remove]",function(){
   console.log(this);
-  //console.log(this.parentNode());
-   //this.siblings().remove();
+  console.log($(this).parent().attr("id"));
+  $(this).parent().remove();
+  database.ref('/' + $(this).parent().attr("id")).remove();
+  
+})
+
+$('tbody').on("click","button[class=edit]",function(){
+  //console.log(this);
+  //console.log($(this).attr('id'));
+  //console.log(database.ref($(this).attr("id")));
+  var ref = database.ref($(this).parent().attr("id"));
+  var recId = $(this).parent().attr("id");
+  $(this).parent().children('td').empty();
+  console.log($(this).children());
+  ref.on("value", function(snapshot) {
+   console.log(snapshot.val());
+  
+  console.log($('tr#'+recId).children('.name'));
+  $('tr#'+recId).children('.name').html('<input class=name value='+snapshot.val().name+'>');
+  $('tr#'+recId).children('.destination').html('<input class=destination value='+snapshot.val().destination+'>');
+  //$('tr#'+recId).children('.frequency').html('<input class=frequency value='+snapshot.val().frequency+'>'); 
+  $('tr#'+recId).children('.nextArrival').html('<input class=nextArrival value='+snapshot.val().nextArrival+'>'); 
+  //$('tr#'+recId).children('.minutesAway').html('<input class=minutesAway value='+snapshot.val().minutesAway+'>');   
+}, function (error) {
+   console.log("Error: " + error.code);
+});  
+
+$('tbody').on("click","button[class=update]",function(){
+      var trId = $(this).parent().attr("id");
+      var newName = $(this).siblings(".name").children('input').attr("value");
+      var newdestination = $(this).siblings(".destination").children('input').attr("value");
+      var newArrival = $(this).siblings(".nextArrival").children('input').attr("value");
+      
+      var diff = 0;
+      console.log(trId);
+      console.log(newName);
+      console.log(newdestination);
+      console.log(newArrival);
+      
+
+
+      database.ref(trId).on("value", function(snapshot) {
+         
+        //var convertedTime = moment(newArrival, "HH:mm");
+        diff = moment(snapshot.val().nextArrival).diff(moment(newArrival), "minutes");
+        tMinutesTillTrain = snapshot.val().minutesAway - diff;
+         console.log(diff);
+         console.log(tMinutesTillTrain);
+      
+      
+  // Code in the logic for storing and retrieving the most recent user.
+       
+       database.ref(trId).update({
+         name: newName,
+         destination: newdestination,
+         nextArrival: newArrival,
+         minutesAway: tMinutesTillTrain
+      
+       });
+           $(this).parent().children('.name').text(snapshot.val().name);
+           $(this).parent().children('.destination').text(snapshot.val().destination);
+           $(this).parent().children('.nextArrival').text(snapshot.val().nextArrival);
+      }, function (error) {
+        console.log("Error: " + error.code);
+      });  
+      //  database.ref(trId).on("value", function(snapshot) {
+      //      $(this).parent().children('.name').text(snapshot.val().name);
+      //      $(this).parent().children('.destination').text(snapshot.val().destination);
+      //      $(this).parent().children('.nextArrival').text(snapshot.val().nextArrival);
+      //  }, function (error) {
+      //   console.log("Error: " + error.code);
+      //  }); 
+
+  })
   
 })
     // Create Error Handling
